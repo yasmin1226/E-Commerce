@@ -1,5 +1,8 @@
+const AppError = require("../utiles/appError");
 const Product = require("./../models/productModel");
 const APIFeatures = require("./../utiles/APIFeatures");
+const catchAsync = require("./../utiles/catchAsync");
+//const AppError = require("./../utiles/appError");
 
 exports.aliasTopProducts = (req, res, next) => {
   req.query.limit = "5";
@@ -10,134 +13,106 @@ exports.aliasTopProducts = (req, res, next) => {
 
 //route handelar
 //get one product
-exports.getOneProduct = async (req, res) => {
-  try {
-    // Product.findOne({_id:req.params.id})
-    const product = await Product.findById(req.params.id);
-    res.status(200).json({
-      status: "success",
-      data: { product },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: "fail",
-      message: err,
-    });
+exports.getOneProduct = catchAsync(async (req, res, next) => {
+  // Product.findOne({_id:req.params.id})
+
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    return next(new AppError("no product found with that id", 404));
   }
-};
+  res.status(200).json({
+    status: "success",
+    data: { product },
+  });
+});
 
 //geconstt all product
-exports.getAllProducts = async (req, res) => {
-  try {
-    //execute the query
+exports.getAllProducts = catchAsync(async (req, res, next) => {
+  //execute the query
 
-    const features = new APIFeatures(Product.find(), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
-    const products = await features.query;
-    //send response
-    res.status(200).json({
-      status: "sucscess",
-      results: products.length,
-      data: { products: products },
-    });
-  } catch (err) {
-    {
-      console.log(err);
-      res.status(404).json({
-        status: "fail",
-        message: err,
-      });
-    }
-  }
-};
+  const features = new APIFeatures(Product.find(), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+  const products = await features.query;
+  //send response
+  res.status(200).json({
+    status: "sucscess",
+    results: products.length,
+    data: { products: products },
+  });
+});
 
 //add product
-exports.createProduct = async (req, res) => {
-  try {
-    const newProduct = await Product.create(req.body);
-    res.status(201).json({
-      status: "success",
-      data: {
-        product: newProduct,
-      },
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: "fail",
-      message: "invalid data send",
-    });
-  }
-};
+exports.createProduct = catchAsync(async (req, res, next) => {
+  const newProduct = await Product.create(req.body);
+  res.status(201).json({
+    status: "success",
+    data: {
+      product: newProduct,
+    },
+  });
+  // try {
+  // } catch (err) {
+  //   res.status(400).json({
+  //     status: "fail",
+  //     message: "invalid data send",
+  //   });
+  // }
+});
 
 //update product
-exports.updateProduct = async (req, res) => {
-  try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    res.status(200).json({
-      status: "success",
-      data: {
-        product,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: "fail",
-      message: err,
-    });
+exports.updateProduct = catchAsync(async (req, res, next) => {
+  const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+  if (!product) {
+    return next(new AppError("no product found with that id", 404));
   }
-};
+  res.status(200).json({
+    status: "success",
+    data: {
+      product,
+    },
+  });
+});
 
 //delete product
-exports.deleteProduct = async (req, res) => {
-  try {
-    await Product.findByIdAndRemove(req.params.id);
-    res.status(204).json({
-      status: "success",
-      data: null,
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: "fail",
-      message: err,
-    });
+exports.deleteProduct = catchAsync(async (req, res, next) => {
+  const product = await Product.findByIdAndRemove(req.params.id);
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+  if (!product) {
+    return next(new AppError("no product found with that id", 404));
   }
-};
-exports.getProductStats = async (req, res) => {
-  try {
-    const stats = await Product.aggregate([
-      {
-        $match: { ratingsAverage: { $gte: 4.5 } },
+});
+exports.getProductStats = catchAsync(async (req, res, next) => {
+  const stats = await Product.aggregate([
+    {
+      $match: { ratingsAverage: { $gte: 4.5 } },
+    },
+    {
+      $group: {
+        _id: { $toUpper: "$mainCatogrie" },
+        numProducts: { $sum: 1 },
+        numRating: { $sum: "$ratingsQuantity" },
+        avgRating: { $avg: "$ratingsAverage" },
+        avgPrice: { $avg: "$price" },
+        minPrice: { $min: "$price" },
       },
-      {
-        $group: {
-          _id: { $toUpper: "$mainCatogrie" },
-          numProducts: { $sum: 1 },
-          numRating: { $sum: "$ratingsQuantity" },
-          avgRating: { $avg: "$ratingsAverage" },
-          avgPrice: { $avg: "$price" },
-          minPrice: { $min: "$price" },
-        },
-      },
-      {
-        $sort: { avgPrice: 1 },
-      },
-    ]);
-    res.status(200).json({
-      status: "success",
-      data: {
-        stats,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: "fail",
-      message: err,
-    });
-  }
-};
+    },
+    {
+      $sort: { avgPrice: 1 },
+    },
+  ]);
+  res.status(200).json({
+    status: "success",
+    data: {
+      stats,
+    },
+  });
+});
