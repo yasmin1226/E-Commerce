@@ -1,12 +1,33 @@
+const multer = require("multer");
+const sharp = require("sharp");
 const AppError = require("../utiles/appError");
 const Product = require("./../models/productModel");
 const APIFeatures = require("./../utiles/APIFeatures");
 const catchAsync = require("./../utiles/catchAsync");
 //const AppError = require("./../utiles/appError");
 
+//uploading files
+// const multiFillter = (req, file.cb) => {
+//   if (file.mimetype.startsWith("image")) {
+//     cb(null, true);
+//   } else {
+//     cb(new AppError("Not an image please upload only imagees", 400), false);
+//   }
+// };
+// const upload = multer({
+//   storage: multerStorage,
+//   fileFilter: multiFillter,
+// });
+
+//exports.uploadProductImages = upload.fields([
+//{ name: "imageCover", maxCount: 1 },
+//{ name: "images", maxCount: 3 },
+//]);
+//upload.array('images',5);
 exports.aliasTopProducts = (req, res, next) => {
   req.query.limit = "5";
-  req.query.sort = "-ratingsAverage,price";
+  req.query.sort = "price,-ratingsAverage";
+
   req.query.fields = "name,price,ratingsAverage,description";
   next();
 };

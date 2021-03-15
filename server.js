@@ -16,6 +16,7 @@ const DB = process.env.DATABASE.replace(
 //console.log(process.env);
 //connect to moongoose DB
 mongoose
+  //.connect(process.env.DATABASE_LOCAL, {
   .connect(DB, {
     useNewUrlParser: true,
     useCreateIndex: true,
@@ -28,7 +29,7 @@ mongoose
 
 const port = process.env.PORT || 50000;
 const server = app.listen(port, () => {
-  console.log("server running");
+  console.log(`server running on port ${port}`);
 });
 process.on("unhandledRejection", (err) => {
   console.log(err.name, err.message);
