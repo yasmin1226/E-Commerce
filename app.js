@@ -24,6 +24,9 @@ if (process.env.NODE_ENV === "environment") {
 
 app.use("/api/products", productRouter);
 app.use("/api/users", userRouter);
+app.get("/", (req, res) => {
+  console.log("heruko!");
+});
 ///jandle every url that doen,t handle it
 //must be the last one
 app.all("*", (req, res, next) => {
