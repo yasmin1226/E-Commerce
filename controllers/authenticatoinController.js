@@ -1,4 +1,4 @@
-//const { promisify } = require("util");
+const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModel");
 const catchAsync = require("./../utiles/catchAsync");
@@ -14,6 +14,7 @@ const signToken = (id) => {
 exports.signup = catchAsync(async (req, res, next) => {
   // const newUser = await User.create(req.body);
   const newUser = await User.create({
+    role: req.body.role,
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
@@ -71,12 +72,23 @@ exports.protect = catchAsync(async (req, res, next) => {
   //2 verification token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   console.log(decoded);
-  //3check if user stil exists
+  // //3check if user stil exists
   const freshUser = await User.findById(decoded.id);
   if (!freshUser) {
     return next(new AppError("the user belongs to this token does no exist"));
   }
-  //4 chek if user change password ofter the token
+  // //4 chek if user change password ofter the token
   req.user = freshUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError("you dont have permission to perform this actiion ", 403)
+      );
+    }
+    next();
+  };
+};

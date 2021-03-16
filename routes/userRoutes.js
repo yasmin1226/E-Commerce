@@ -8,11 +8,27 @@ router.post("/login", authenticatoinController.login);
 
 router
   .route("/")
-  .get(userController.getAllUsers)
-  .post(userController.createUser);
+  .get(
+    authenticatoinController.protect,
+    authenticatoinController.restrictTo("admin"),
+    userController.getAllUsers
+  )
+  .post(
+    authenticatoinController.protect,
+    authenticatoinController.restrictTo("admin"),
+    userController.createUser
+  );
 router
   .route("/:id")
-  .get(userController.getOneUser)
+  .get(
+    authenticatoinController.protect,
+    // authenticatoinController.restrictTo("admin"),
+    userController.getOneUser
+  )
   .patch(userController.updateUser)
-  .delete(userController.deleteUser);
+  .delete(
+    authenticatoinController.protect,
+    authenticatoinController.restrictTo("admin"),
+    userController.deleteUser
+  );
 module.exports = router;

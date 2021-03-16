@@ -26,9 +26,9 @@ const catchAsync = require("./../utiles/catchAsync");
 //upload.array('images',5);
 exports.aliasTopProducts = (req, res, next) => {
   req.query.limit = "5";
-  req.query.sort = "price,-ratingsAverage";
+  req.query.sort = "price";
 
-  req.query.fields = "name,price,ratingsAverage,description";
+  req.query.fields = "name,price,description";
   next();
 };
 
@@ -118,10 +118,8 @@ exports.getProductStats = catchAsync(async (req, res, next) => {
     },
     {
       $group: {
-        _id: { $toUpper: "$mainCatogrie" },
+        _id: { $toUpper: "$catogrie" },
         numProducts: { $sum: 1 },
-        numRating: { $sum: "$ratingsQuantity" },
-        avgRating: { $avg: "$ratingsAverage" },
         avgPrice: { $avg: "$price" },
         minPrice: { $min: "$price" },
       },

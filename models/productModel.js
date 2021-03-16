@@ -1,14 +1,13 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
 const productSchema = new mongoose.Schema({
-  mainCatogrie: {
+  catogrie: {
     type: String,
     required: [true, "a product must hava a main catogrie"],
     enum: ["shoes", "bags"],
   },
   name: {
     type: String,
-
     unique: true,
     required: [true, "a product must hava a name"],
   },
@@ -18,20 +17,19 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: [true, "a product must have its quntity"],
   },
-  ratingsAverage: { type: Number, default: 4.5, max: 5 },
   price: { type: Number, required: [true, "product must have price"] },
-  ratingsQuantity: { type: Number, default: 0 },
-  priceDiscount: { type: Number },
   description: {
     type: String,
     trim: true,
     required: [true, "a product must have a description"],
   },
-  imageCover: {
+  priceDiscount: {
+    type: Number,
+  },
+  image: {
     type: String,
     required: [true, "a product must have a cover image "],
   },
-  images: [String],
   createdAt: {
     type: Date,
     default: Date.now(),

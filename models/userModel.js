@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const validator = require("validator");
 const bycrpt = require("bcryptjs");
+//const { bool } = require("sharp");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -18,6 +19,11 @@ const userSchema = new mongoose.Schema({
   photo: {
     type: String,
     // defult: "defultUser.png"
+  },
+  role: {
+    type: String,
+    enum: ["admin", "user"], //guide , lead guide
+    default: "user",
   },
 
   password: {
@@ -57,12 +63,6 @@ userSchema.methods.correctPassword = async function (
 ) {
   return await bycrpt.compare(candidatePassword, userPassword);
 };
-//get data and saving in DB
-// userSchema.methods.changedPasswordAfter = function () {
-//   if (this.passwordChangedAt) {
-//     console.log(this.passwordChangedAt, JWTTimestamps);
-//   }
-//   return false;
-// };
+
 const User = mongoose.model("User", userSchema);
 module.exports = User;
