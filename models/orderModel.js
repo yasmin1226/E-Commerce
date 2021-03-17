@@ -10,10 +10,10 @@ const orderSchema = new mongoose.Schema({
     ref: "User",
     required: [true, "ordering must belongs to a User"],
   },
-  price: {
-    type: Number,
-    required: [true, "booking must have a price"],
-  },
+  // price: {
+  //   type: Number,
+  //   required: [true, "booking must have a price"],
+  // },
   status: {
     type: String,
     enum: ["pending", "rejicted", "accepted"],
@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     defult: Date.now(),
   },
-  totalPrice: {},
+  totalPrice: { type: Number },
 });
 orderSchema.pre(/^find/, function (next) {
   this.populate("user").populate({

@@ -74,6 +74,19 @@ exports.getOneProduct = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.searchProductWithName = catchAsync(async (req, res, next) => {
+  // Product.findOne({_id:req.params.id})
+
+  const product = await Product.findOne({ name: req.params.name });
+  if (!product) {
+    return next(new AppError("no product found with that id", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    data: { product },
+  });
+});
+
 //geconstt all product
 exports.getAllProducts = catchAsync(async (req, res, next) => {
   //execute the query
