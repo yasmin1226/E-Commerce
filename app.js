@@ -1,5 +1,6 @@
 const express = require("express");
 const morgan = require("morgan");
+const comperaion = require("compression");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
@@ -30,7 +31,7 @@ app.use(xss());
 //   })
 // );
 app.use(express.static(`${__dirname}/public`));
-
+app.use(comperaion());
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   // console.log(c); //error

@@ -67,7 +67,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true,
   });
-  console.log("updatedUser", updatedUser);
+  // console.log("updatedUser", updatedUser);
   // user.name = "yas";
   //await user.save();
   res.status(200).json({
@@ -105,7 +105,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 });
 exports.createUser = catchAsync(async (req, res, next) => {
   const newUser = await User.create(req.body);
-  console.log(req.body);
+  //console.log(req.body);
   res.status(201).json({
     status: "success",
     data: {
