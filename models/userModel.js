@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
-    // defult: "defultUser.png"
+    defult: "defult.jpg",
   },
   role: {
     type: String,

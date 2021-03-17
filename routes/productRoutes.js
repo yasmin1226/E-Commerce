@@ -1,11 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const authenticatoinController = require("./../controllers/authenticatoinController");
+
 //max
-const multer = require("multer");
+//const multer = require("multer");
 ///const upload = multer({ dest: "public/img/products" });
 //..
 const productController = require("./../controllers/productController");
+const userController = require("./../controllers/userController");
+
 router
   .route("/top-5-cheap")
   .get(productController.aliasTopProducts, productController.getAllProducts);
@@ -18,13 +21,19 @@ router
   //max
   //upload.single("productImage")
   //..
-  .post(/*upload.single("productImage"),*/ productController.createProduct);
+  .post(
+    /*upload.single("productImage"),*/ productController.uploadProductImage,
+    productController.resizeProductImage,
+    productController.createProduct
+  );
 router
   .route("/:id")
   .get(productController.getOneProduct)
   .patch(
     authenticatoinController.protect,
-    authenticatoinController.restrictTo("admin"),
+    // authenticatoinController.restrictTo("admin"),
+    productController.uploadProductImage,
+    productController.resizeProductImage,
     productController.updateProduct
   )
   .delete(

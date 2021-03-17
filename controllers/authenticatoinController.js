@@ -4,33 +4,66 @@ const User = require("./../models/userModel");
 const catchAsync = require("./../utiles/catchAsync");
 const bycrpt = require("bcryptjs");
 const AppError = require("./../utiles/appError");
-//const { token } = require("morgan");
 
+//const { read } = require("fs");
+//const { token } = require("morgan");
 const signToken = (id) => {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
-exports.signup = catchAsync(async (req, res, next) => {
-  // const newUser = await User.create(req.body);
-  const newUser = await User.create({
-    role: req.body.role,
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-  });
-  const token = signToken(newUser._id);
-  //  jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-  //   expiresIn: process.env.JWT_EXPIRES_IN,
-  // });
-  res.status(201).json({
-    status: "sucess",
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const expires = new Date(
+    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+  );
+  //const httpOnly = true;
+  //let secure = false;
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === "production")
+    //cookieOptions.secure = true; // cookieOptions.secure = true;
+    res.cookie("jwt", token, cookieOptions);
+  //console.log("cookie", res.cookie("jwt", token, cookieOptions));
+  res.status(statusCode).json({
+    status: "success",
     token,
     data: {
-      user: newUser,
+      user,
     },
   });
+};
+exports.signup = catchAsync(async (req, res, next) => {
+  // console.log("req.cookies", req.cookies);
+  // const newUser = await User.create(req.body);
+
+  const newUser = await User.create(
+    //  {
+    req.body
+    // role: req.body.role,
+    // name: req.body.name,
+    // email: req.body.email,
+    // password: req.body.password,
+    // passwordConfirm: req.body.passwordConfirm,
+    // }
+  );
+  createSendToken(newUser, 201, res);
+  // const token = signToken(newUser._id);
+  // //  jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+  // //   expiresIn: process.env.JWT_EXPIRES_IN,
+  // // });
+  // res.status(201).json({
+  //   status: "sucess",
+  //   token,
+  //   data: {
+  //     user: newUser,
+  //   },
+  // });
 });
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
@@ -47,12 +80,44 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError("Incorrect email or password", 401)); //unauthorized
   }
   ///3 send token if ok
-  const token = signToken(user._id);
+  createSendToken(user, 201, res);
+
+  // const token = signToken(user._id);
+  // res.status(200).json({
+  //   status: "success",
+  //   token,
+  // });
+});
+exports.isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      const decoded = await promisify(jwt.verify)(
+        req.cookie.jwt,
+        process.env_JWT_SECRET
+      );
+      const currentUser = await user.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+      //   res.locals.user = currentUser;
+      res.user = currentUser;
+
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
+  next();
+};
+exports.logout = (req, res) => {
+  res.cookie("jwt", "loggedout", {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
   res.status(200).json({
     status: "success",
-    token,
   });
-});
+};
 exports.protect = catchAsync(async (req, res, next) => {
   //1 get token & chek if its exist
   let token;
@@ -61,6 +126,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   //console.log(token);
   if (!token) {
@@ -92,3 +159,19 @@ exports.restrictTo = (...roles) => {
     next();
   };
 };
+
+// exports.updatePassword = catchAsync(async (req, res, next) => {
+//   const user = await User.findById(req.user.id).select("+password");
+//   if (!(await user.correctPassword(req.body.passwordConfirm, user.password))) {
+//     return next(new AppError("your current password is wrong", 401));
+//   }
+
+//   user.password = req.body.password;
+//   user.passwordConfirm = req.body.passwordConfirm;
+//   await user.save();
+//   const token = signToken(user._id);
+//   read.status(200).json({
+//     status: "success",
+//     token,
+//   });
+// });

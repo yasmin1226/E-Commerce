@@ -4,6 +4,33 @@ const AppError = require("../utiles/appError");
 const Product = require("./../models/productModel");
 const APIFeatures = require("./../utiles/APIFeatures");
 const catchAsync = require("./../utiles/catchAsync");
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("product")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("not image", 400), false);
+  }
+};
+const upload = multer({
+  storage: multerStorage,
+  //fileFilter: multerFilter,
+});
+
+exports.uploadProductImage = upload.single("image");
+
+exports.resizeProductImage = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+  req.body.image = `product-${req.params.id}.jpeg`;
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat("jpeg")
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/products/${req.body.image}`);
+  next();
+});
 //const AppError = require("./../utiles/appError");
 
 //uploading files
@@ -85,6 +112,8 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 
 //update product
 exports.updateProduct = catchAsync(async (req, res, next) => {
+  //const filterdBody = filterObj(req.body, "name", "quantity", "photo");
+  //if (req.file) filterdBody.image = req.file.filename;
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -92,6 +121,7 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
   if (!product) {
     return next(new AppError("no product found with that id", 404));
   }
+
   res.status(200).json({
     status: "success",
     data: {
